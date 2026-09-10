@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VyaparMitra – Hyperlocal Vendor Copilot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-16">
+
+  <!-- Header -->
+  <header class="bg-emerald-800 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-emerald-700 border border-emerald-500 rounded-xl flex items-center justify-center shadow-inner">
+          <i class="fa-solid fa-store text-xl text-emerald-200"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight">VyaparMitra</h1>
+            <span class="text-[10px] uppercase font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">Gemini Reimagined</span>
+          </div>
+          <p class="text-xs text-emerald-200">Hyperlocal Vendor Inventory & Dynamic Waste Copilot</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {% if has_api_key %}
+        <span class="text-xs bg-emerald-900/80 text-emerald-300 py-1.5 px-3 rounded-full border border-emerald-600 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Gemini 1.5 Active
+        </span>
+        {% else %}
+        <span class="text-xs bg-amber-900/40 text-amber-200 py-1.5 px-3 rounded-full border border-amber-600/70 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          Demo Mode (Set API Key in .env)
+        </span>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total SKUs</p>
+        <p id="kpiSkus" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Stock</p>
+        <p id="kpiStock" class="text-2xl font-bold text-slate-900 mt-1">0 <span class="text-xs text-slate-500 font-normal">kg</span></p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Estimated Value</p>
+        <p id="kpiValue" class="text-2xl font-bold text-emerald-700 mt-1">₹0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Perishable Risk</p>
+        <p id="kpiAtRisk" class="text-2xl font-bold text-amber-600 mt-1">0 <span class="text-xs text-slate-500 font-normal">items</span></p>
+      </div>
+    </div>
+
+    <!-- Core Interactive Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      
+      <!-- Card 1: Bill & Stock Scanner -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="font-semibold text-base text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-emerald-600"></i> Scan Wholesale Bill / Stock
+            </h2>
+            <button id="btnLoadSample" class="text-xs text-emerald-700 hover:text-emerald-800 font-medium underline">
+              Load Sample Bill
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 mb-3">Snap a photo of your mandi slip or vegetable basket. Gemini parses items, quantities, and shelf lives automatically.</p>
+          
+          <label for="imageInput" class="border-2 border-dashed border-emerald-200 hover:border-emerald-400 bg-emerald-50/40 hover:bg-emerald-50 rounded-xl p-5 flex flex-col items-center justify-center cursor-pointer transition">
+            <i class="fa-solid fa-camera text-2xl text-emerald-600 mb-1"></i>
+            <span class="text-xs font-semibold text-emerald-900">Upload or Snap Photo</span>
+            <span class="text-[11px] text-slate-400 mt-0.5">Supports PNG, JPG, or receipts</span>
+            <input type="file" id="imageInput" accept="image/*" class="hidden" />
+          </label>
+          
+          <div id="imagePreviewContainer" class="hidden mt-3">
+            <img id="imagePreview" class="w-full h-32 object-cover rounded-lg border border-slate-200" />
+            <button id="btnScan" class="mt-2.5 w-full bg-emerald-700 hover:bg-emerald-800 text-white font-medium py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition">
+              <i class="fa-solid fa-microchip"></i> Extract Inventory via Gemini Multimodal
+            </button>
+          </div>
+        </div>
+        <div id="scanStatus" class="text-xs text-slate-500 mt-2 font-medium"></div>
+      </div>
+
+      <!-- Card 2: Voice Logger & Evening Waste Optimizer -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <div>
+          <h2 class="font-semibold text-base text-slate-800 flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-microphone text-emerald-600"></i> Voice Log Daily Sales
+          </h2>
+          <p class="text-xs text-slate-500 mb-3">Hands busy at the stall? Tap and speak in your language to log outgoing sales without manual entry.</p>
+          
+          <button id="btnVoice" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-3 rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-300 transition">
+            <i class="fa-solid fa-microphone text-red-500 text-sm" id="micIcon"></i>
+            <span id="voiceText">Tap to Speak (e.g., "Sold 5 kg tomatoes at 35")</span>
+          </button>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Dynamic Spoilage Prevention</h3>
+            <span class="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">Rush Hour Feature</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-2.5">Gemini analyzes inventory shelf-life vs current time to generate liquidation discounts before items spoil.</p>
+          <button id="btnAdvisory" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition">
+            <i class="fa-solid fa-tags"></i> Generate Evening Discount Strategy
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Inventory Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm md:text-base">
+          <i class="fa-solid fa-boxes-stacked text-emerald-600"></i> Active Stall Inventory
+        </h2>
+        <button id="btnClearInventory" class="text-xs text-red-600 hover:text-red-700 font-medium">
+          Clear Table
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs md:text-sm text-slate-600">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-semibold">
+            <tr>
+              <th class="px-4 py-3">Produce / Item</th>
+              <th class="px-4 py-3">Category</th>
+              <th class="px-4 py-3">Remaining Stock</th>
+              <th class="px-4 py-3">Wholesale Cost</th>
+              <th class="px-4 py-3">Shelf Life</th>
+              <th class="px-4 py-3">Perishability Status</th>
+            </tr>
+          </thead>
+          <tbody id="inventoryBody" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="6" class="text-center py-10 text-slate-400">
+                <i class="fa-solid fa-basket-shopping text-3xl mb-2 text-slate-300 block"></i>
+                No items scanned yet. Upload a bill or click "Load Sample Bill" above!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AI Clearance Advisory Section -->
+    <div id="advisorySection" class="hidden bg-amber-50/80 border border-amber-200 rounded-2xl p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-semibold text-amber-900 flex items-center gap-2 text-sm md:text-base">
+          <i class="fa-solid fa-bullhorn text-amber-600"></i> AI Evening Clearance & Dynamic Pricing Blueprint
+        </h2>
+        <span class="text-xs bg-amber-200 text-amber-900 font-semibold px-2.5 py-0.5 rounded-full">Automated Waste Prevention</span>
+      </div>
+      <p class="text-xs text-amber-800">Below are algorithmic price markdowns and localized conversational vendor pitches crafted by Gemini 1.5 to sell perishable items before end-of-day:</p>
+      <div id="advisoryCards" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        <!-- AI suggestions dynamically inserted -->
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center text-xs text-slate-400 mt-10">
+    VyaparMitra • Built for the Google Gemini Initiative • Reimagining Our Markets
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

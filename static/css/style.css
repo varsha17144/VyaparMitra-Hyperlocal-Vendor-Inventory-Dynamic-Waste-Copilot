@@ -1,0 +1,9 @@
+/* VyaparMitra Custom Enhancements */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.transition {
+  transition: all 0.2s ease-in-out;
+}
