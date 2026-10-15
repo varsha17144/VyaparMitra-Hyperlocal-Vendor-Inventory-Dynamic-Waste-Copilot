@@ -18,7 +18,7 @@ In urban markets across the world, street vendors and small vegetable stall owne
 ---
 
 ## 🛠️ Architecture & Tech Stack
-- **AI Core:** Google GenAI SDK (`gemini-1.5-flash`) for multimodal image analysis & structured JSON output.
+- **AI Core:** Google GenAI SDK (`gemini-3.6-flash`) for multimodal image analysis & structured JSON output.
 - **Backend:** Python (Flask), `pillow` (image preprocessing), `python-dotenv`.
 - **Frontend:** HTML5, Tailwind CSS, FontAwesome, Web Speech API for native voice capture.
 - **Resilience:** Built-in demo fallback mode ensures smooth evaluation even before setting an API key.
